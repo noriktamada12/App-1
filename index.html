@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mada APP1</title>
+    <!-- PWA Meta Tags Minimal -->
+    <meta name="theme-color" content="#171717">
+    <link rel="manifest" href="data:application/manifest+json;base64,
+        ewoJIm5hbWUiOiAiQ2F0YXQgRHVpdCBDZXBhdCIsCgkiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKCSJzdGFydF91cmwiOiAiLi8iLAoJInRoZW1lX2NvbG9yIjogIiMxNzE3MTciLAoJImJhY2tncm91bmRfY29sb3IiOiAiI2Y1ZjVmNSI7CgkiZml0X3RpbGVzIjogdHJ1ZSwKCSJpY29ucyI6IFt7CgkJInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyL2UzZTNlMy8xNzE3MTc/dGV4dD1DIi4KCQkic2l6ZXMiOiAiMTkyeDE5MiIsCgkJImRlc2lnbl9zaXplcyI6ICIxOTJ4MTkyIiwKCQkidHlwZSI6ICJpbWFnZS9wbmcKCX0sewoJCSJzcmMiOiAiaHR0cHM6Ly9wbGFjZWhvbGQuY28vNTEyeDUxMi9lM2UzZTMvMTcxNzE3P3RleHQ9QyIsCgkJInNpemVzIjogIjUxMng1MTIiLAoJCSJkZXNpZ25fc2l6ZXMiOiAiNTEyeDUxMiIsCgkJInN0eWxlIjogImZvbnQtc2l6ZToxMHB0O2ZvbnQtZmFtaWx5OkFyaWFsIiwKCQkidHlwZSI6ICJpbWFnZS9wbmciCn1dCn0
+    ">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Mengatur font Inter sebagai default */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        :root {
+            --primary-bg-light: #f5f5f5;
+            --secondary-bg-light: #ffffff;
+            --text-color-light: #171717;
+            --primary-bg-dark: #171717;
+            --secondary-bg-dark: #262626;
+            --text-color-dark: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Light Mode Default */
+        body {
+            background-color: var(--primary-bg-light);
+            color: var(--text-color-light);
+        }
+        
+        /* Dark Mode */
+        .dark body {
+            background-color: var(--primary-bg-dark);
+            color: var(--text-color-dark);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #a3a3a3; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #525252; }
+
+        /* Styling for the mic button animation */
+        .mic-listening {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Pulse uses neutral colors now */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(115, 115, 115, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(115, 115, 115, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(115, 115, 115, 0); }
+        }
+
+        /* Toast Styling */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+            min-width: 250px;
+            text-align: center;
+        }
+
+        .show-toast {
+            opacity: 1 !important;
+            bottom: 40px;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20 transition-colors duration-300">
+    <div class="max-w-xl mx-auto p-4 sm:p-6">
+        <!-- Header -->
+        <header class="mb-6 flex justify-between items-center sticky top-0 bg-f5f5f5 dark:bg-171717 z-10 pt-4">
+            <h1 class="text-4xl font-extrabold text-stone-900 dark:text-stone-50"></h1>
+            <button id="theme-toggle" class="p-3 rounded-full bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-50 transition border border-stone-200 dark:border-stone-600 shadow-md">
+                <!-- Icon will be set dynamically -->
+            </button>
+        </header>
+
+        <!-- Ringkasan Statistik -->
+        <div id="summary-section" class="grid grid-cols-3 gap-3 mb-6 bg-white dark:bg-stone-800 p-4 rounded-xl shadow-lg border border-stone-200 dark:border-stone-700">
+            <div class="text-center p-3 rounded-lg bg-stone-50 dark:bg-stone-700/40">
+                <p class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase">Today</p>
+                <p id="total-today" class="text-lg font-bold text-stone-900 dark:text-stone-50 mt-1">Rp 0</p>
+            </div>
+            <div class="text-center p-3 rounded-lg bg-stone-50 dark:bg-stone-700/40">
+                <p class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase">1 week</p>
+                <p id="total-7days" class="text-lg font-bold text-stone-900 dark:text-stone-50 mt-1">Rp 0</p>
+            </div>
+            <div class="text-center p-3 rounded-lg bg-stone-50 dark:bg-stone-700/40">
+                <p class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase">this month</p>
+                <p id="total-month" class="text-lg font-bold text-stone-900 dark:text-stone-50 mt-1">Rp 0</p>
+            </div>
+        </div>
+
+        <!-- Input Area (Speech & Manual) -->
+        <div class="bg-white dark:bg-stone-800 p-4 rounded-xl shadow-lg border border-stone-200 dark:border-stone-700 mb-6">
+            <h2 class="text-2xl font-semibold mb-4 border-b pb-2 border-stone-200 dark:border-stone-700"></h2>
+
+            <!-- Speech Input -->
+            <div class="flex items-center space-x-4 mb-4">
+                <button id="mic-button" class="flex-shrink-0 w-20 h-20 bg-stone-900 hover:bg-stone-700 text-white rounded-full flex items-center justify-center transition shadow-xl active:scale-90 duration-200">
+                    <span id="mic-icon" class="w-8 h-8"></span>
+                </button>
+                <div class="flex-grow">
+                    <p id="mic-status" class="text-sm font-medium text-stone-500 dark:text-stone-400 mb-1">Tekan & Bicara (e.g., "jajan 5k")</p>
+                    <input type="text" id="speech-result-display" placeholder="Hasil Suara..." class="w-full p-3 bg-stone-100 dark:bg-stone-700 border-none rounded-xl text-stone-900 dark:text-white transition focus:ring-1 focus:ring-stone-400" readonly>
+                </div>
+            </div>
+
+            <!-- Fallback/Manual Input -->
+            <form id="manual-form" class="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-700">
+                <p id="manual-fallback-info" class="text-sm text-red-500 hidden font-semibold">⚠️ Speech API tidak tersedia. Gunakan input manual.</p>
+                <input type="text" id="manual-description" placeholder="Deskripsi (e.g., Kopi pagi)" class="w-full p-4 bg-stone-100 dark:bg-stone-700 border-none rounded-xl transition text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400" required>
+                <input type="number" id="manual-amount" placeholder="Nominal (e.g., 20000)" class="w-full p-4 bg-stone-100 dark:bg-stone-700 border-none rounded-xl transition text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400" required min="1">
+                <button type="submit" class="w-full p-4 bg-stone-900 hover:bg-stone-700 text-white font-bold rounded-xl transition shadow-lg active:scale-[0.99] uppercase tracking-wider">Tambah Manual</button>
+            </form>
+        </div>
+
+        <!-- Tombol Cepat & Undo -->
+        <div class="grid grid-cols-4 gap-2 mb-8">
+            <button class="quick-amount-btn p-3 bg-stone-200 hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-900 dark:text-stone-50 font-semibold rounded-xl shadow-sm active:scale-95 transition" data-amount="5000">5K</button>
+            <button class="quick-amount-btn p-3 bg-stone-200 hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-900 dark:text-stone-50 font-semibold rounded-xl shadow-sm active:scale-95 transition" data-amount="10000">10K</button>
+            <button class="quick-amount-btn p-3 bg-stone-200 hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-900 dark:text-stone-50 font-semibold rounded-xl shadow-sm active:scale-95 transition" data-amount="20000">20K</button>
+            <button id="undo-button" class="p-3 bg-stone-400 hover:bg-stone-500 dark:bg-stone-600 dark:hover:bg-stone-500 text-white font-semibold rounded-xl shadow-sm active:scale-95 transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <span data-lucide="undo-2" class="w-5 h-5"></span>
+            </button>
+        </div>
+
+        <!-- Daftar Transaksi -->
+        <div class="space-y-4">
+            <h2 class="text-2xl font-semibold text-stone-900 dark:text-stone-50 mb-4 border-b pb-2 border-stone-200 dark:border-stone-700">Histori Pengeluaran</h2>
+            <div id="transaction-list" class="space-y-4">
+                <!-- Transaksi akan dirender di sini -->
+            </div>
+        </div>
+        
+        <!-- Opsi Lain -->
+        <div class="mt-8 bg-white dark:bg-stone-800 p-4 rounded-xl shadow-lg border border-stone-200 dark:border-stone-700">
+            <h2 class="text-xl font-semibold mb-3 border-b pb-2 border-stone-200 dark:border-stone-700">Pengaturan Data</h2>
+            <div class="flex space-x-3">
+                <button id="export-btn" class="flex-1 p-3 bg-stone-300 hover:bg-stone-400 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-900 dark:text-stone-50 font-semibold rounded-xl transition shadow-md active:scale-95 flex items-center justify-center">
+                    <span data-lucide="file-text" class="w-5 h-5 mr-1"></span> Export CSV
+                </button>
+                <button id="import-btn" class="flex-1 p-3 bg-stone-300 hover:bg-stone-400 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-900 dark:text-stone-50 font-semibold rounded-xl transition shadow-md active:scale-95 flex items-center justify-center">
+                    <span data-lucide="upload" class="w-5 h-5 mr-1"></span> Import CSV
+                </button>
+            </div>
+            <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+        </div>
+
+        <!-- Modal Import Confirmation -->
+        <div id="import-modal" class="fixed inset-0 bg-stone-900 bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
+            <div class="bg-white dark:bg-stone-800 p-6 rounded-xl shadow-2xl max-w-sm w-full border border-stone-300 dark:border-stone-700">
+                <h3 class="text-xl font-bold mb-4">Konfirmasi Import</h3>
+                <p class="mb-6 text-stone-600 dark:text-stone-300">Data yang di-import akan <span class="font-bold text-red-600 dark:text-red-400">MENIMPA</span> data yang sudah ada. Lanjutkan?</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-import" class="p-3 px-4 bg-stone-200 dark:bg-stone-700 text-stone-900 dark:text-stone-50 rounded-xl font-semibold transition hover:bg-stone-300 dark:hover:bg-stone-600">Batal</button>
+                    <button id="confirm-import" class="p-3 px-4 bg-red-600 text-white rounded-xl font-semibold transition hover:bg-red-700">Timpa & Import</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="p-3 font-medium text-white rounded-xl shadow-2xl transition">
+        <!-- Pesan Toast -->
+    </div>
+
+    <script>
+        // Inisialisasi Lucide icons
+        lucide.createIcons();
+
+        // ----------------------------------------------------
+        // I. KONSTANTA & INISIALISASI
+        // ----------------------------------------------------
+        const STORAGE_KEY = 'daily-expenses-data';
+        let transactions = [];
+        let lastTransaction = null; // Untuk fungsi undo
+
+        const el = {
+            micButton: document.getElementById('mic-button'),
+            micStatus: document.getElementById('mic-status'),
+            micIcon: document.getElementById('mic-icon'),
+            speechResultDisplay: document.getElementById('speech-result-display'),
+            manualForm: document.getElementById('manual-form'),
+            manualDescription: document.getElementById('manual-description'),
+            manualAmount: document.getElementById('manual-amount'),
+            manualFallbackInfo: document.getElementById('manual-fallback-info'),
+            transactionList: document.getElementById('transaction-list'),
+            undoButton: document.getElementById('undo-button'),
+            exportBtn: document.getElementById('export-btn'),
+            importBtn: document.getElementById('import-btn'),
+            csvFileInput: document.getElementById('csv-file-input'),
+            importModal: document.getElementById('import-modal'),
+            cancelImport: document.getElementById('cancel-import'),
+            confirmImport: document.getElementById('confirm-import'),
+            totalToday: document.getElementById('total-today'),
+            total7Days: document.getElementById('total-7days'),
+            totalMonth: document.getElementById('total-month'),
+            toast: document.getElementById('toast'),
+            themeToggle: document.getElementById('theme-toggle'),
+        };
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+
+        // ----------------------------------------------------
+        // II. UTILITY FUNCTIONS
+        // ----------------------------------------------------
+
+        /**
+         * Mengubah angka menjadi format Rupiah.
+         * @param {number} number
+         * @returns {string}
+         */
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+
+        /**
+         * Menampilkan notifikasi Toast.
+         * @param {string} message
+         * @param {boolean} isError
+         */
+        const showToast = (message, isError = false) => {
+            el.toast.textContent = message;
+            // Gunakan warna kontras monokrom untuk feedback: Hitam/Putih untuk sukses, Merah untuk error
+            const bgColor = isError ? 'bg-red-600' : 'bg-stone-900 dark:bg-stone-50 dark:text-stone-900 text-white';
+            const textColor = isError ? 'text-white' : 'text-white dark:text-stone-900';
+
+            el.toast.className = `p-3 font-medium rounded-xl shadow-2xl transition show-toast ${bgColor} ${textColor}`;
+            
+            setTimeout(() => {
+                el.toast.classList.remove('show-toast');
+                // Reset class for next use without specific color classes attached permanently
+                el.toast.className = `p-3 font-medium text-white rounded-xl shadow-2xl transition`;
+            }, 3000);
+        };
+
+        /**
+         * Memuat data dari localStorage.
+         */
+        const loadTransactions = () => {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                transactions = data ? JSON.parse(data) : [];
+                transactions.sort((a, b) => b.timestamp - a.timestamp); // Urutkan terbaru di atas
+            } catch (error) {
+                console.error("Gagal memuat data dari localStorage:", error);
+                transactions = [];
+                showToast("Error: Gagal memuat data lama.", true);
+            }
+        };
+
+        /**
+         * Menyimpan data ke localStorage.
+         */
+        const saveTransactions = () => {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+            } catch (error) {
+                console.error("Gagal menyimpan data ke localStorage:", error);
+                showToast("Error: Gagal menyimpan data.", true);
+            }
+        };
+
+        /**
+         * Parsing teks dari speech recognition atau manual input menjadi nominal angka.
+         * Contoh: "lima ribu", "5k", "3,5rb" -> 5000, 3500
+         * @param {string} text
+         * @returns {number | null}
+         */
+        const parseAmount = (text) => {
+            if (!text) return null;
+
+            // 1. Bersihkan teks: ubah ke huruf kecil dan hapus kata-kata yang tidak relevan
+            let cleanText = text.toLowerCase()
+                .replace(/rupiah|pengeluaran|nominal|bayar|keluar|sejumlah/g, '')
+                .trim();
+
+            // 2. Konversi shorthand 'ribu' (k, rb) dan titik/koma desimal
+            let amount = 0;
+            const hasK = cleanText.includes('k') || cleanText.includes('rb');
+            
+            // Hapus semua spasi setelah pembersihan awal
+            cleanText = cleanText.replace(/\s+/g, '');
+
+            // Ganti koma dengan titik untuk desimal, jika ada
+            cleanText = cleanText.replace(/,/g, '.');
+
+            // Regex untuk menemukan angka (termasuk desimal)
+            const numberMatch = cleanText.match(/(\d+\.?\d*)/);
+            
+            if (numberMatch && numberMatch[0]) {
+                let num = parseFloat(numberMatch[0]);
+                
+                if (hasK) {
+                    amount = Math.round(num * 1000); // 12.5k * 1000 = 12500
+                } else if (num < 100 && num > 0) {
+                     // Asumsi: Jika angka kecil (<100) dan tidak ada 'k'/'rb', ini mungkin dalam ribuan.
+                    if (text.toLowerCase().includes('ribu') || text.toLowerCase().includes('k') || text.toLowerCase().includes('rb')) {
+                         amount = Math.round(num * 1000);
+                    } else {
+                         amount = Math.round(num); // Ambil angka mentah
+                    }
+                }
+                 else {
+                    amount = Math.round(num);
+                }
+            } else {
+                // 3. Fallback: Konversi kata-kata angka bahasa Indonesia (sangat sederhana)
+                const numberWords = {
+                    'satu': 1, 'dua': 2, 'tiga': 3, 'empat': 4, 'lima': 5,
+                    'enam': 6, 'tujuh': 7, 'delapan': 8, 'sembilan': 9, 'sepuluh': 10
+                };
+                
+                // Cek untuk kata kunci "ribu"
+                if (cleanText.includes('ribu')) {
+                    const parts = cleanText.split('ribu');
+                    let base = 0;
+                    
+                    // Cek angka kata (e.g. "lima ribu")
+                    for (const word in numberWords) {
+                        if (parts[0].includes(word)) {
+                            base = numberWords[word] * 1000;
+                            break;
+                        }
+                    }
+                    
+                    // Jika tidak ada kata angka, cari angka digit (e.g. "12 ribu")
+                    if (base === 0) {
+                        const digitMatch = parts[0].match(/(\d+)/);
+                        if (digitMatch) {
+                            base = parseInt(digitMatch[0]) * 1000;
+                        }
+                    }
+                    amount = base;
+                }
+            }
+
+            return amount > 0 ? amount : null;
+        };
+
+
+        /**
+         * Kategorisasi sederhana berdasarkan kata kunci dalam deskripsi.
+         * @param {string} description
+         * @returns {string}
+         */
+        const categorize = (description) => {
+            const text = description.toLowerCase();
+            if (text.includes('makan') || text.includes('minum') || text.includes('warung') || text.includes('restoran') || text.includes('kopi')) {
+                return 'Makan & Minum';
+            }
+            if (text.includes('jajan') || text.includes('cemilan') || text.includes('rokok') || text.includes('snack')) {
+                return 'Jajan';
+            }
+            if (text.includes('transport') || text.includes('bensin') || text.includes('tol') || text.includes('ojek') || text.includes('parkir')) {
+                return 'Transportasi';
+            }
+            if (text.includes('pulsa') || text.includes('data') || text.includes('listrik') || text.includes('kontrakan') || text.includes('bayar')) {
+                return 'Tagihan & Rumah';
+            }
+            if (text.includes('belanja') || text.includes('supermarket') || text.includes('kebutuhan')) {
+                return 'Belanja Bulanan';
+            }
+            return 'Lain-lain';
+        };
+
+        /**
+         * Tambah transaksi baru.
+         * @param {number} amount
+         * @param {string} description
+         */
+        const addTransaction = (amount, description) => {
+            if (typeof amount !== 'number' || amount <= 0) {
+                showToast("Error: Nominal tidak valid (harus angka > 0).", true);
+                return false;
+            }
+
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const newTransaction = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                date: dateStr,
+                timestamp: now.getTime(),
+                description: description.trim() || categorize(description),
+                category: categorize(description),
+                amount: amount,
+            };
+
+            transactions.push(newTransaction);
+            lastTransaction = newTransaction; // Set for undo
+            saveTransactions();
+            renderApp();
+            showToast(`✅ Dicatat: ${newTransaction.description} (${formatRupiah(amount)})`);
+            el.speechResultDisplay.value = ''; // Bersihkan display
+            el.manualDescription.value = '';
+            el.manualAmount.value = '';
+            el.undoButton.disabled = false;
+            return true;
+        };
+
+        // ----------------------------------------------------
+        // III. RENDERING & UI LOGIC
+        // ----------------------------------------------------
+
+        /**
+         * Mendapatkan icon berdasarkan kategori.
+         * @param {string} category
+         * @returns {string} (Lucide icon name)
+         */
+        const getCategoryIcon = (category) => {
+            switch (category) {
+                case 'Makan & Minum': return 'coffee';
+                case 'Jajan': return 'candy';
+                case 'Transportasi': return 'car';
+                case 'Tagihan & Rumah': return 'home';
+                case 'Belanja Bulanan': return 'shopping-bag';
+                default: return 'credit-card';
+            }
+        };
+
+        /**
+         * Render daftar transaksi dan update ringkasan.
+         */
+        const renderApp = () => {
+            el.transactionList.innerHTML = '';
+            const grouped = transactions.reduce((acc, t) => {
+                acc[t.date] = acc[t.date] || [];
+                acc[t.date].push(t);
+                return acc;
+            }, {});
+
+            const dates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+            
+            dates.forEach(date => {
+                const dailyTransactions = grouped[date];
+                const dailyTotal = dailyTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+                const dateContainer = document.createElement('div');
+                dateContainer.className = 'mb-6';
+
+                // Daily Header
+                const dateTitle = document.createElement('h3');
+                dateTitle.className = 'text-lg font-bold mb-3 p-2 bg-stone-200 dark:bg-stone-700 rounded-lg flex justify-between items-center text-stone-900 dark:text-stone-50';
+                const formattedDate = new Date(date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' });
+                dateTitle.innerHTML = `
+                    <span class="text-sm uppercase">${formattedDate}</span>
+                    <div class="flex items-center">
+                        <span class="text-lg font-extrabold text-red-600 dark:text-red-400">${formatRupiah(dailyTotal)}</span>
+                        <button onclick="deleteDay('${date}')" class="text-stone-500 hover:text-red-600 ml-2 p-1 rounded-full hover:bg-stone-300 dark:hover:bg-stone-600 transition" title="Hapus semua transaksi hari ini">
+                            <span data-lucide="trash-2" class="w-4 h-4"></span>
+                        </button>
+                    </div>
+                `;
+                dateContainer.appendChild(dateTitle);
+                lucide.createIcons(); // Re-initialize icons
+
+                const ul = document.createElement('ul');
+                ul.className = 'space-y-2';
+
+                dailyTransactions.forEach(t => {
+                    const li = document.createElement('li');
+                    li.id = `trans-${t.id}`;
+                    li.className = 'flex justify-between items-center bg-white dark:bg-stone-800 p-4 rounded-xl shadow-sm border border-stone-200 dark:border-stone-700 hover:shadow-md transition';
+                    li.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-stone-100 dark:bg-stone-700 rounded-full text-stone-600 dark:text-stone-400">
+                                <span data-lucide="${getCategoryIcon(t.category)}" class="w-5 h-5"></span>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="font-semibold text-stone-900 dark:text-stone-50">${t.description}</p>
+                                <p class="text-xs font-medium text-stone-500 dark:text-stone-400">${t.category}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-lg text-red-600 dark:text-red-400">${formatRupiah(t.amount)}</span>
+                            <button onclick="deleteItem('${t.id}')" class="text-stone-400 hover:text-red-500 transition p-1 rounded-full hover:bg-stone-100 dark:hover:bg-stone-700 active:scale-90" title="Hapus item ini">
+                                <span data-lucide="x" class="w-5 h-5"></span>
+                            </button>
+                        </div>
+                    `;
+                    ul.appendChild(li);
+                    lucide.createIcons(); // Re-initialize icons
+                });
+                dateContainer.appendChild(ul);
+                el.transactionList.appendChild(dateContainer);
+            });
+            updateSummary();
+        };
+
+        /**
+         * Update ringkasan total Hari Ini, 7 Hari, dan Bulan Ini.
+         */
+        const updateSummary = () => {
+            const today = new Date().toISOString().split('T')[0];
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+            const totalToday = transactions
+                .filter(t => t.date === today)
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const total7Days = transactions
+                .filter(t => new Date(t.date) >= oneWeekAgo)
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const totalMonth = transactions
+                .filter(t => new Date(t.date) >= startOfMonth)
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            el.totalToday.textContent = formatRupiah(totalToday);
+            el.total7Days.textContent = formatRupiah(total7Days);
+            el.totalMonth.textContent = formatRupiah(totalMonth);
+        };
+
+        // ----------------------------------------------------
+        // IV. DATA ACTIONS
+        // ----------------------------------------------------
+
+        /**
+         * Hapus satu item transaksi.
+         * @param {string} id
+         */
+        window.deleteItem = (id) => {
+            const initialLength = transactions.length;
+            const itemToDelete = transactions.find(t => t.id === id);
+
+            if (!window.confirm(`Hapus item: ${itemToDelete.description} (${formatRupiah(itemToDelete.amount)})?`)) {
+                return;
+            }
+
+            // Cek apakah item yang dihapus adalah item terakhir (untuk undo)
+            if (lastTransaction && lastTransaction.id === id) {
+                lastTransaction = null;
+                el.undoButton.disabled = true;
+            }
+
+            transactions = transactions.filter(t => t.id !== id);
+            
+            if (transactions.length < initialLength) {
+                saveTransactions();
+                renderApp();
+                showToast(`🗑️ Item '${itemToDelete.description}' berhasil dihapus.`);
+            }
+        };
+
+        /**
+         * Hapus semua transaksi pada tanggal tertentu.
+         * @param {string} date
+         */
+        window.deleteDay = (date) => {
+            if (!window.confirm(`Yakin ingin menghapus SEMUA pengeluaran pada tanggal ${new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}?`)) {
+                return;
+            }
+            
+            const initialLength = transactions.length;
+            transactions = transactions.filter(t => t.date !== date);
+            
+            if (transactions.length < initialLength) {
+                saveTransactions();
+                renderApp();
+                // Reset last transaction if it was part of the deleted day
+                if (lastTransaction && lastTransaction.date === date) {
+                    lastTransaction = null;
+                    el.undoButton.disabled = true;
+                }
+                showToast(`🗑️ Semua pengeluaran pada ${date} berhasil dihapus.`);
+            }
+        };
+
+        /**
+         * Fungsi Undo: membatalkan transaksi terakhir yang ditambahkan.
+         */
+        const handleUndo = () => {
+            if (!lastTransaction) {
+                showToast("Tidak ada transaksi terakhir untuk dibatalkan.", true);
+                return;
+            }
+
+            const index = transactions.findIndex(t => t.id === lastTransaction.id);
+            if (index > -1) {
+                const desc = lastTransaction.description;
+                transactions.splice(index, 1);
+                lastTransaction = null; // Reset
+                el.undoButton.disabled = true;
+                saveTransactions();
+                renderApp();
+                showToast(`↩️ Undo berhasil. Transaksi '${desc}' dibatalkan.`);
+            } else {
+                lastTransaction = null; // Reset
+                el.undoButton.disabled = true;
+            }
+        };
+
+        // ----------------------------------------------------
+        // V. SPEECH RECOGNITION LOGIC
+        // ----------------------------------------------------
+
+        /**
+         * Update status UI untuk Speech Recognition.
+         * @param {'idle'|'listening'|'error'} status
+         * @param {string} message
+         */
+        const updateMicUI = (status, message) => {
+            el.micStatus.textContent = message;
+            el.micButton.classList.remove('mic-listening', 'bg-red-600', 'bg-stone-900', 'bg-stone-500', 'dark:bg-stone-50');
+            el.micButton.classList.add('text-white', 'dark:text-stone-900');
+            el.micIcon.innerHTML = '';
+
+            switch (status) {
+                case 'listening':
+                    el.micButton.classList.add('mic-listening', 'bg-red-600', 'text-white'); // Merah untuk listening (danger/aktif)
+                    el.micIcon.innerHTML = `<span data-lucide="mic" class="w-8 h-8"></span>`;
+                    break;
+                case 'error':
+                    el.micButton.classList.add('bg-stone-500', 'text-white');
+                    el.micIcon.innerHTML = `<span data-lucide="mic-off" class="w-8 h-8"></span>`;
+                    break;
+                case 'idle':
+                default:
+                    el.micButton.classList.add('bg-stone-900', 'dark:bg-stone-50', 'text-white', 'dark:text-stone-900');
+                    el.micIcon.innerHTML = `<span data-lucide="mic" class="w-8 h-8"></span>`;
+                    break;
+            }
+            lucide.createIcons();
+        };
+
+        /**
+         * Mengaktifkan Speech Recognition.
+         */
+        const startSpeechRecognition = () => {
+            if (!recognition) return;
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+
+            try {
+                recognition.start();
+                isListening = true;
+                updateMicUI('listening', 'MENDENGARKAN... Bicara Sekarang!');
+                el.speechResultDisplay.value = '';
+            } catch (e) {
+                console.error("Error saat memulai recognition:", e);
+                updateMicUI('error', 'Error memulai. Coba lagi.');
+                isListening = false;
+            }
+        };
+
+        /**
+         * Inisialisasi Speech Recognition.
+         */
+        const initSpeechRecognition = () => {
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false; // Hanya sekali dengar
+                recognition.lang = 'id-ID'; // Bahasa Indonesia
+                recognition.interimResults = false;
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    const amount = parseAmount(transcript);
+                    const success = addTransaction(amount, transcript);
+                    
+                    el.speechResultDisplay.value = transcript;
+
+                    if (!success) {
+                        showToast(`Gagal: '${transcript}'. Nominal tidak ditemukan.`, true);
+                    }
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    updateMicUI('idle', 'Tekan & Bicara (e.g., "jajan 5k")');
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech Recognition Error:', event.error);
+                    updateMicUI('error', `Error: ${event.error}. Tekan untuk coba lagi.`);
+                    isListening = false;
+                    showToast(`Error Suara: ${event.error}`, true);
+                };
+
+                updateMicUI('idle', 'Tekan & Bicara (e.g., "jajan 5k")');
+                el.micButton.addEventListener('click', startSpeechRecognition);
+
+            } else {
+                // Fallback jika Speech API tidak didukung
+                el.micButton.disabled = true;
+                el.micStatus.textContent = 'Speech Recognition TIDAK DIDUKUNG';
+                el.micButton.classList.add('bg-stone-500');
+                el.micIcon.innerHTML = `<span data-lucide="mic-off" class="w-8 h-8"></span>`;
+                el.manualFallbackInfo.classList.remove('hidden');
+                lucide.createIcons();
+            }
+        };
+
+        // ----------------------------------------------------
+        // VI. DATA IMPORT/EXPORT (CSV)
+        // ----------------------------------------------------
+
+        /**
+         * Export data ke CSV.
+         */
+        const exportToCSV = () => {
+            if (transactions.length === 0) {
+                showToast("Tidak ada data untuk di-export.", true);
+                return;
+            }
+
+            const headers = ["ID", "Tanggal (YYYY-MM-DD)", "Timestamp", "Deskripsi", "Kategori", "Nominal"];
+            const csv = transactions.map(t => {
+                return [
+                    `"${t.id}"`, // ID mungkin mengandung koma/karakter, gunakan quote
+                    `"${t.date}"`,
+                    t.timestamp,
+                    `"${t.description.replace(/"/g, '""')}"`, // Handle double quotes in description
+                    `"${t.category}"`,
+                    t.amount
+                ].join(',');
+            });
+
+            const csvContent = [headers.join(','), ...csv].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `catat_duit_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("Export CSV berhasil! File terunduh.");
+        };
+
+        /**
+         * Import data dari CSV.
+         * @param {string} csvText
+         */
+        const importFromCSV = (csvText) => {
+            const lines = csvText.trim().split('\n');
+            if (lines.length <= 1) {
+                showToast("Gagal Import: File kosong atau hanya berisi header.", true);
+                return;
+            }
+
+            const newTransactions = [];
+            const header = lines[0].split(',').map(h => h.replace(/"/g, '').trim()); // ID, Tanggal, Timestamp, Deskripsi, Kategori, Nominal
+
+            // Pastikan format header sesuai
+            if (header.length !== 6 || header[5].toLowerCase() !== 'nominal') {
+                 showToast("Gagal Import: Format CSV tidak sesuai. Pastikan ada 6 kolom: ID, Tanggal, Timestamp, Deskripsi, Kategori, Nominal.", true);
+                 return;
+            }
+
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+
+                // Simple regex to parse CSV line, accounting for quoted fields
+                const values = line.match(/(".*?"|[^",\n]+)(,|$)/g)
+                    .map(v => v.replace(/,$/, '').replace(/^"(.*)"$/, '$1'));
+
+                if (values.length === 6) {
+                    const amount = parseInt(values[5]);
+                    const timestamp = parseInt(values[2]);
+                    
+                    if (isNaN(amount) || amount <= 0 || isNaN(timestamp) || !values[1]) {
+                         console.warn(`Baris ${i + 1} diabaikan: data tidak valid.`, values);
+                         continue;
+                    }
+
+                    newTransactions.push({
+                        id: values[0],
+                        date: values[1],
+                        timestamp: timestamp,
+                        description: values[3],
+                        category: values[4],
+                        amount: amount
+                    });
+                }
+            }
+
+            if (newTransactions.length > 0) {
+                transactions = newTransactions;
+                saveTransactions();
+                renderApp();
+                showToast(`🎉 Import Berhasil! Ditambahkan ${newTransactions.length} transaksi.`);
+                lastTransaction = null;
+                el.undoButton.disabled = true;
+            } else {
+                 showToast("Gagal Import: Tidak ada transaksi valid yang ditemukan.", true);
+            }
+        };
+
+        // ----------------------------------------------------
+        // VII. TEMA (Dark Mode)
+        // ----------------------------------------------------
+
+        /**
+         * Inisialisasi dan toggle tema gelap.
+         */
+        const initializeTheme = () => {
+            const storedTheme = localStorage.getItem('theme');
+            const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    el.themeToggle.innerHTML = `<span data-lucide="sun" class="w-6 h-6"></span>`;
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    el.themeToggle.innerHTML = `<span data-lucide="moon" class="w-6 h-6"></span>`;
+                }
+                lucide.createIcons();
+            };
+
+            if (storedTheme) {
+                applyTheme(storedTheme);
+            } else {
+                applyTheme(isSystemDark ? 'dark' : 'light');
+            }
+
+            el.themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+            
+            // Listen for system theme change
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        };
+
+
+        // ----------------------------------------------------
+        // VIII. EVENT LISTENERS & MAIN EXECUTION
+        // ----------------------------------------------------
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            loadTransactions();
+            renderApp();
+            initSpeechRecognition();
+
+            // 1. Manual Form Submission
+            el.manualForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const amount = parseInt(el.manualAmount.value);
+                const description = el.manualDescription.value;
+
+                if (addTransaction(amount, description)) {
+                    el.manualDescription.value = '';
+                    el.manualAmount.value = '';
+                }
+            });
+
+            // 2. Quick Buttons
+            document.querySelectorAll('.quick-amount-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const amount = parseInt(button.dataset.amount);
+                    el.manualAmount.value = amount;
+                    el.manualDescription.focus();
+                });
+            });
+
+            // 3. Undo Button
+            el.undoButton.addEventListener('click', handleUndo);
+
+            // 4. Export Button
+            el.exportBtn.addEventListener('click', exportToCSV);
+
+            // 5. Import Button (Show Modal)
+            el.importBtn.addEventListener('click', () => {
+                el.importModal.classList.remove('hidden');
+            });
+
+            // 6. Import Modal Actions
+            el.cancelImport.addEventListener('click', () => {
+                el.importModal.classList.add('hidden');
+            });
+
+            el.confirmImport.addEventListener('click', () => {
+                el.importModal.classList.add('hidden');
+                el.csvFileInput.click(); // Trigger file input after confirmation
+            });
+
+            // 7. CSV File Input Handler
+            el.csvFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    importFromCSV(e.target.result);
+                };
+                reader.onerror = () => {
+                    showToast("Gagal membaca file.", true);
+                };
+                reader.readAsText(file);
+                event.target.value = null; // Reset file input
+            });
+        });
+    </script>
+</body>
+</html>
